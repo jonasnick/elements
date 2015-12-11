@@ -302,7 +302,9 @@ Value signblock(const Array& params, bool fHelp)
     }
 
     block.proof.solution = CScript();
-    GenerateProof(&block, pwalletMain);
+    if (!GenerateProof(&block, pwalletMain)) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Block signing failed");
+    }
     return HexStr(block.proof.solution.begin(), block.proof.solution.end());
 }
 
