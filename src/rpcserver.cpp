@@ -318,7 +318,7 @@ static const CRPCCommand vRPCCommands[] =
 #ifdef ENABLE_WALLET
     /* Wallet */
     { "wallet",             "addmultisigaddress",     &addmultisigaddress,     true,      false,      true },
-    { "wallet",             "backupwallet",           &backupwallet,           true,      false,      true },
+    { "wallet",             "claimcoins",             &claimcoins,            true,      false,      true },
     { "wallet",             "dumpprivkey",            &dumpprivkey,            true,      false,      true },
     { "wallet",             "dumpwallet",             &dumpwallet,             true,      false,      true },
     { "wallet",             "dumpblindingkey",        &dumpblindingkey,        true,      false,      true },
@@ -327,6 +327,7 @@ static const CRPCCommand vRPCCommands[] =
     { "wallet",             "getaccount",             &getaccount,             true,      false,      true },
     { "wallet",             "getaddressesbyaccount",  &getaddressesbyaccount,  true,      false,      true },
     { "wallet",             "getbalance",             &getbalance,             false,     false,      true },
+    { "wallet",             "getfundingaddress",      &getfundingaddress,      false,     false,      true },
     { "wallet",             "getnewaddress",          &getnewaddress,          true,      false,      true },
     { "wallet",             "getrawchangeaddress",    &getrawchangeaddress,    true,      false,      true },
     { "wallet",             "getreceivedbyaccount",   &getreceivedbyaccount,   false,     false,      true },
@@ -352,9 +353,11 @@ static const CRPCCommand vRPCCommands[] =
     { "wallet",             "sendfrom",               &sendfrom,               false,     false,      true },
     { "wallet",             "sendmany",               &sendmany,               false,     false,      true },
     { "wallet",             "sendtoaddress",          &sendtoaddress,          false,     false,      true },
+    { "wallet",             "sendtomainchain",        &sendtomainchain,        false,     false,      true },
     { "wallet",             "setaccount",             &setaccount,             true,      false,      true },
     { "wallet",             "settxfee",               &settxfee,               true,      false,      true },
     { "wallet",             "signmessage",            &signmessage,            true,      false,      true },
+    { "wallet",             "spendclaim",             &spendclaim,             true,      false,      true },
     { "wallet",             "walletlock",             &walletlock,             true,      false,      true },
     { "wallet",             "walletpassphrasechange", &walletpassphrasechange, true,      false,      true },
     { "wallet",             "walletpassphrase",       &walletpassphrase,       true,      false,      true },

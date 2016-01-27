@@ -91,6 +91,7 @@ BITCOIN_CORE_H = \
   coins.h \
   compat.h \
   compressor.h \
+  contracthashtool.h \
   primitives/block.h \
   primitives/transaction.h \
   core_io.h \
@@ -196,6 +197,7 @@ libbitcoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_wallet_a_SOURCES = \
   db.cpp \
+  contracthashtool.cpp \
   crypter.cpp \
   rpcdump.cpp \
   rpcwallet.cpp \

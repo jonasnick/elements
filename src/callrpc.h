@@ -9,6 +9,7 @@
 #include "rpcclient.h"
 #include "rpcprotocol.h"
 #include "uint256.h"
+#include "univalue/univalue.h"
 
 #include <string>
 
@@ -27,6 +28,11 @@ public:
 };
 
 json_spirit::Object CallRPC(const std::string& strMethod, const json_spirit::Array& params, std::string port="");
+std::string CallRPCUniValu(const std::string& strMethod, const json_spirit::Array& params, std::string port="");
 bool IsConfirmedBitcoinBlock(const uint256& hash, int nMinConfirmationDepth);
+json_spirit::Value getMainchainRawTx(std::string txID, int mode);
+std::string getMainchainRawTxUniValue(std::string txID, int mode);
+json_spirit::Value getMainchainBlock(std::string blockhash);
+json_spirit::Value getMainchainSPVProof(std::vector<json_spirit::Value> txns);
 
 #endif // BITCOIN_CALLRPC_H
