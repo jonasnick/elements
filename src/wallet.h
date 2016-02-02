@@ -161,6 +161,7 @@ public:
 
     std::set<int64_t> setKeyPool;
     std::map<CKeyID, CKeyMetadata> mapKeyMetadata;
+    std::map<CScriptID, uint256> mapSpecificBlindingKeys;
 
     typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
     MasterKeyMap mapMasterKeys;
@@ -196,9 +197,8 @@ public:
         nNextResend = 0;
         nLastResend = 0;
         nTimeFirstKey = 0;
-        unsigned char static_blinding_key[32] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32};
-        blinding_key.Set(&static_blinding_key[0], &static_blinding_key[32], true);
-        blinding_pubkey = blinding_key.GetPubKey();
+        blinding_key = CKey();
+        blinding_derivation_key = uint256();
     }
 
     std::map<uint256, CWalletTx> mapWallet;
@@ -214,8 +214,12 @@ public:
 
     int64_t nTimeFirstKey;
 
+    //! The actual blinding key is computed as HMAC-SHA256(key=blinding_derivation_key, msg=scriptPubKey).
+    //! There can be exceptions in mapSpecificBlindingKeys.
+    uint256 blinding_derivation_key;
+
+    //! Only for backward compatibility with older wallets (superseded by blinding_derivation_key).
     CKey blinding_key;
-    CPubKey blinding_pubkey;
 
     const CWalletTx* GetWalletTx(const uint256& hash) const;
 
@@ -244,6 +248,10 @@ public:
     bool LoadKey(const CKey& key, const CPubKey &pubkey) { return CCryptoKeyStore::AddKeyPubKey(key, pubkey); }
     //! Load metadata (used by LoadWallet)
     bool LoadKeyMetadata(const CPubKey &pubkey, const CKeyMetadata &metadata);
+    //! Adds a script-specific blinding key to the wallet, and saves it to disk.
+    bool AddSpecificBlindingKey(const CScriptID& scriptid, const uint256& key);
+    //! Adds a script-specific blinding key to the wallet without saving it to disk (used by LoadWallet)
+    bool LoadSpecificBlindingKey(const CScriptID& scriptid, const uint256& key);
 
     bool LoadMinVersion(int nVersion) { AssertLockHeld(cs_wallet); nWalletVersion = nVersion; nWalletMaxVersion = std::max(nWalletMaxVersion, nVersion); return true; }
 
@@ -427,6 +435,10 @@ public:
 
     /** Watch-only address added */
     boost::signals2::signal<void (bool fHaveWatchOnly)> NotifyWatchonlyChanged;
+
+    //! script == NULL gives the backward compatible blinding key
+    CKey GetBlindingKey(const CScript* script) const;
+    CPubKey GetBlindingPubKey(const CScript& script) const;
 };
 
 /** A key allocated from the key pool. */
@@ -561,8 +573,10 @@ public:
     std::string strFromAccount;
     int64_t nOrderPos; //! position in ordered transaction list
 
+    // For each output
     mutable std::vector<std::vector<unsigned char> > vBlindingFactors;
     mutable std::vector<CAmount> vAmountsOut;
+    mutable std::vector<CPubKey> vBlindingKeys;
 
     // memory only
     mutable bool fDebitCached;
@@ -926,16 +940,38 @@ public:
 
     std::set<uint256> GetConflicts() const;
 
+
 private:
-    void FillValuesAndBlindingFactors() const {
+    void FillValuesAndBlindingFactors(unsigned int nOut) const {
         if (!vAmountsOut.size()) {
             vAmountsOut.resize(vout.size());
             vBlindingFactors.resize(vout.size());
-            for (unsigned int i = 0; i < vout.size(); i++) {
-                std::vector<unsigned char> nonce(32, 0);
-                int res = UnblindOutput(pwallet->blinding_key, vout[i], vAmountsOut[i], vBlindingFactors[i]);
-                if (!res)
-                    vAmountsOut[i] = -1;
+            vBlindingKeys.resize(vout.size());
+        }
+        if (vAmountsOut[nOut] == 0) {
+            std::vector<unsigned char> nonce(32, 0);
+            int res = 0;
+            CKey blinding_key;
+            if (!res) {
+                // For unblinded outputs.
+                res = UnblindOutput(blinding_key, vout[nOut], vAmountsOut[nOut], vBlindingFactors[nOut]);
+            }
+            if (!res && (blinding_key = pwallet->GetBlindingKey(&vout[nOut].scriptPubKey)).IsValid()) {
+                // For outputs using derived blinding.
+                res = UnblindOutput(blinding_key, vout[nOut], vAmountsOut[nOut], vBlindingFactors[nOut]);
+                if (res) {
+                    vBlindingKeys[nOut] = blinding_key.GetPubKey();
+                }
+            }
+            if (!res && (blinding_key = pwallet->GetBlindingKey(NULL)).IsValid()) {
+                // For outputs using deprecated static blinding.
+                res = UnblindOutput(blinding_key, vout[nOut], vAmountsOut[nOut], vBlindingFactors[nOut]);
+                if (res) {
+                    vBlindingKeys[nOut] = blinding_key.GetPubKey();
+                }
+            }
+            if (!res) {
+                vAmountsOut[nOut] = -1;
             }
         }
     }
@@ -943,14 +979,19 @@ private:
 public:
     //! Returns either the value out (if it is to us) or 0
     CAmount GetValueOut(unsigned int nOut) const {
-        FillValuesAndBlindingFactors();
+        FillValuesAndBlindingFactors(nOut);
         return vAmountsOut[nOut];
     }
 
     //! Returns either the blinding factor (if it is to us) or 0
     std::vector<unsigned char> GetBlindingFactor(unsigned int nOut) const {
-        FillValuesAndBlindingFactors();
+        FillValuesAndBlindingFactors(nOut);
         return vBlindingFactors[nOut];
+    }
+
+    CPubKey GetBlindingKey(unsigned int nOut) const {
+        FillValuesAndBlindingFactors(nOut);
+        return vBlindingKeys[nOut];
     }
 };
 

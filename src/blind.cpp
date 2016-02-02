@@ -41,6 +41,9 @@ int UnblindOutput(const CKey &key, const CTxOut& txout, CAmount& amount_out, std
         blinding_factor_out.resize(0);
         return -1;
     }
+    if (!key.IsValid()) {
+        return 0;
+    }
     CPubKey ephemeral_key(txout.nValue.vchNonceCommitment);
     if (!ephemeral_key.IsValid()) {
         return 0;
