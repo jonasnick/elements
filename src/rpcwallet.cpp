@@ -599,8 +599,6 @@ Value spendclaim(const Array& params, bool fHelp)
     std::string redeem_hex = HexStr(inner.begin(), inner.end());
 
 
-    //create raw transaction sending the value to freshly made address
-    std::string walletAddr = getnewaddress(Array(), false).get_str();
     CTransaction txDecodeTmp;
     CMutableTransaction mtx(txDecodeTmp);
 
@@ -618,10 +616,16 @@ Value spendclaim(const Array& params, bool fHelp)
     CTxIn txin(txid, 0, CScript(), 0x100000000 - 1 - withdrawalSettlingPeriod);
     mtx.vin.push_back(txin);
     mtx.nTxFee += tx.vout[0].nValue.GetAmount(); //Redundant. 
-
+    
+    //create raw transaction sending the value to freshly made address
+    std::string walletAddr = getnewaddress(Array(), false).get_str();
     CBitcoinAddress addr(walletAddr);
     CScript scriptPubKey = GetScriptForDestination(addr.Get());
     CTxOut txout(tx.vout[0].nValue, scriptPubKey);
+    if (addr.IsBlinded()) {
+        CPubKey pubkey = addr.GetBlindingKey();
+        txout.nValue.vchNonceCommitment = std::vector<unsigned char>(pubkey.begin(), pubkey.end());
+    }
     mtx.vout.push_back(txout);
     mtx.nTxFee -= tx.vout[0].nValue.GetAmount();
 
