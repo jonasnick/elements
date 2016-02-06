@@ -92,7 +92,7 @@ string AccountFromValue(const Value& value)
 }
 
 //Get WithdrawLock TxOut from Transaction that fulfills the required value + eps
-Value getProperTxOut(int req_value, CTransaction& txnIn)
+Value getProperTxOut(CAmount req_value, CTransaction& txnIn)
 {
     for (unsigned int i=0; i<txnIn.vout.size(); i++)
     {
@@ -124,7 +124,7 @@ Value getProperTxOut(int req_value, CTransaction& txnIn)
 }
 
 //Finds locked UTXOs on sidechain to claim
-Value UTXOFind(int value)
+Value UTXOFind(CAmount value)
 {
     //Getrawtransaction for the entire mempool?
     Value mempool = getrawmempool(Array(), false);
