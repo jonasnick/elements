@@ -16,7 +16,7 @@
 #include <secp256k1_ecdh.h>
 #include <secp256k1_schnorr.h>
 
-secp256k1_context_t *secp256k1_ctx_cht = NULL;
+secp256k1_context *secp256k1_ctx_cht = NULL;
 
 
 int get_pubkeys_from_redeemscript(unsigned char *redeem_script, unsigned int redeem_script_len, unsigned char* pubkeys[]) {
@@ -221,7 +221,7 @@ json_spirit::Value contract_hashtool(const char mode, const char* redeem_script_
             for (i = 0; i < key_count; i++) {
                 unsigned char res[32];
                 CHMAC_SHA256(keys_work[i], 33).Write(data, 4 + 16 + targetLen).Finalize(res);
-                secp256k1_pubkey_t pubkey;
+                secp256k1_pubkey pubkey;
                 if (!secp256k1_ec_pubkey_parse(secp256k1_ctx_cht, &pubkey, keys_work[i], 33)) {
                     return json_spirit::Value::null;
                 }
@@ -232,8 +232,8 @@ json_spirit::Value contract_hashtool(const char mode, const char* redeem_script_
                     }
                     break;
                 }
-                int len = 33;
-                secp256k1_ec_pubkey_serialize(secp256k1_ctx_cht, keys_work[i], &len, &pubkey, 1);
+                size_t len = 33;
+                secp256k1_ec_pubkey_serialize(secp256k1_ctx_cht, keys_work[i], &len, &pubkey, SECP256K1_EC_COMPRESSED);
                 assert(len == 33);
             }
             // Break if all keys have been successfully tweaked
@@ -260,7 +260,7 @@ json_spirit::Value contract_hashtool(const char mode, const char* redeem_script_
         ret.push_back(Pair("p2sh", tweakedAddr.ToString()));
     } else if (mode == 0x2) {
         unsigned char priv[33], pub[33];
-        secp256k1_pubkey_t pubkey;
+        secp256k1_pubkey pubkey;
 
         //Check validity of private key string then copy to bytes
         CBitcoinSecret secret;
@@ -283,11 +283,11 @@ json_spirit::Value contract_hashtool(const char mode, const char* redeem_script_
             memcpy(data + 4 + sizeof(nonce), p2sh_bytes,     sizeof(p2sh_bytes));
 
         // Gen public key from private
-        int len = 0;
+        size_t len = 33;
         if (secp256k1_ec_pubkey_create(secp256k1_ctx_cht, &pubkey, priv) != 1) {
             return json_spirit::Value::null;
         }
-        secp256k1_ec_pubkey_serialize(secp256k1_ctx_cht, pub, &len, &pubkey, 1);
+        secp256k1_ec_pubkey_serialize(secp256k1_ctx_cht, pub, &len, &pubkey, SECP256K1_EC_COMPRESSED);
         assert(len == 33);
 
         // Gen new private key by tweaking based on commitment to pubkey and data
