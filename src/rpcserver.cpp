@@ -318,7 +318,7 @@ static const CRPCCommand vRPCCommands[] =
 #ifdef ENABLE_WALLET
     /* Wallet */
     { "wallet",             "addmultisigaddress",     &addmultisigaddress,     true,      false,      true },
-    { "wallet",             "claimcoins",             &claimcoins,            true,      false,      true },
+    { "wallet",             "claimwithdawal",         &claimwithdrawal,        true,      false,      true },
     { "wallet",             "dumpprivkey",            &dumpprivkey,            true,      false,      true },
     { "wallet",             "dumpwallet",             &dumpwallet,             true,      false,      true },
     { "wallet",             "dumpblindingkey",        &dumpblindingkey,        true,      false,      true },
@@ -357,7 +357,7 @@ static const CRPCCommand vRPCCommands[] =
     { "wallet",             "setaccount",             &setaccount,             true,      false,      true },
     { "wallet",             "settxfee",               &settxfee,               true,      false,      true },
     { "wallet",             "signmessage",            &signmessage,            true,      false,      true },
-    { "wallet",             "spendclaim",             &spendclaim,             true,      false,      true },
+    { "wallet",             "spendwithdrawal",        &spendwithdrawal,        true,      false,      true },
     { "wallet",             "walletlock",             &walletlock,             true,      false,      true },
     { "wallet",             "walletpassphrasechange", &walletpassphrasechange, true,      false,      true },
     { "wallet",             "walletpassphrase",       &walletpassphrase,       true,      false,      true },
