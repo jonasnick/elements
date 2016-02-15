@@ -182,7 +182,13 @@ Value UTXOFind(CAmount value)
     }
     
     //Lastly look at genesis block
-    Value genesis = getblock(getblockhash(Array(0), false).get_array(), false);
+
+    Array hashParam;
+    hashParam.push_back((int)0);
+    Value blockHash = getblockhash(hashParam, false);
+    Array blockParam;
+    blockParam.push_back(blockHash);
+    Value genesis = getblock(blockParam, false);
     Value txid = genesis.get_obj()[6].value_.get_array()[0];
     Value vout(0);
     
@@ -196,7 +202,7 @@ Value UTXOFind(CAmount value)
         Array ret;
         ret.push_back(txid);
         ret.push_back(vout);
-        ret.push_back(txout.get_obj()[2].value_);
+        ret.push_back(AmountFromValue(txout.get_obj()[2].value_));
         return ret;
     }
     
