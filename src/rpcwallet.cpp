@@ -654,8 +654,10 @@ Value spendwithdrawal(const Array& params, bool fHelp)
     Array dumpparam;
     dumpparam.push_back(params[1].get_str());
     Value privkey = dumpprivkey(dumpparam, false);
+    Array privkeyarr;
+    privkeyarr.push_back(privkey.get_str());
 
-    signParams.push_back(privkey.get_str());
+    signParams.push_back(privkeyarr);
 
     //Sign transaction
     Value signedTxn = signrawtransaction(signParams, false);
