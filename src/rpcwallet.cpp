@@ -372,7 +372,7 @@ Value claimwithdrawal(const Array& params, bool fHelp)
     CBitcoinAddress addr(params[0].get_str());
 
     if (find_value(txnInfo.get_obj(), "confirmations").get_int() < 10) {
-        throw runtime_error("You must wait 10 Bitcoin confirmations.");
+        //throw runtime_error("You must wait 10 Bitcoin confirmations.");
     }
 
     Array blockhash;
