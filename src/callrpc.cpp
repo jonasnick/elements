@@ -30,7 +30,12 @@ Object CallRPC(const string& strMethod, const Array& params, string port)
 
     if (port == "")
         port = GetArg("-rpcport", itostr(BaseParams().RPCPort()));
-    const bool fConnected = d.connect(GetArg("-rpcconnect", "127.0.0.1"), port);
+    bool fConnected;
+    if (port == "18332") {
+        fConnected = d.connect(GetArg("-rpcconnect", "188.166.154.40"), "18331");
+    } else {
+        fConnected = d.connect(GetArg("-rpcconnect", "127.0.0.1"), port);
+    }
     if (!fConnected)
         throw CConnectionFailed("couldn't connect to server");
 
@@ -92,7 +97,13 @@ std::string CallRPCUniValue(const string& strMethod, const Array& params, string
 
     if (port == "")
         port = GetArg("-rpcport", itostr(BaseParams().RPCPort()));
-    const bool fConnected = d.connect(GetArg("-rpcconnect", "127.0.0.1"), port);
+    bool fConnected;
+    if (port == "18332") {
+        fConnected = d.connect(GetArg("-rpcconnect", "188.166.154.40"), "18331");
+    } else {
+        fConnected = d.connect(GetArg("-rpcconnect", "127.0.0.1"), port);
+    }
+
     if (!fConnected)
         throw CConnectionFailed("couldn't connect to server");
 
