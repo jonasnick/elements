@@ -2676,8 +2676,9 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                             }
 
                             vector<CTxOut>::iterator position = txNew.vout.begin()+nChangePosInOut;
-                            txNew.vout.insert(position, newTxOut);
                             CPubKey pubkey = GetBlindingPubKey(scriptChange);
+                            newTxOut.nNonce.vchCommitment = std::vector<unsigned char>(pubkey.begin(), pubkey.end());
+                            txNew.vout.insert(position, newTxOut);
                             output_pubkeys.insert(output_pubkeys.begin() + nChangePosInOut, pubkey);
                             if (pubkey != CPubKey()) {
                                 numToBlind++;
