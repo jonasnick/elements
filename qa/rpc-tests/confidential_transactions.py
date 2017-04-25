@@ -40,6 +40,20 @@ class CTTest (BitcoinTestFramework):
         node1 = 0
         node2 = 0
 
+        # Before we move funds, test blindrawtransaction case blinding
+        # a transaction with no confidential inputs, and one confidential output (change)
+        # marked for blinding. An additional 0-value output should be appended
+        raw = self.nodes[0].createrawtransaction([], {self.nodes[0].validateaddress(self.nodes[0].getnewaddress())["unconfidential"]:209999})
+        fund = self.nodes[0].fundrawtransaction(raw)
+        decode = self.nodes[0].decoderawtransaction(fund["hex"])
+        assert_equal(len(decode["vout"]), 3)
+        assert(decode["vout"][-1]["scriptPubKey"]["asm"] != "OP_RETURN")
+        blind = self.nodes[0].blindrawtransaction(fund["hex"])
+        decode = self.nodes[0].decoderawtransaction(blind)
+        # Outputs: the amount, the change, the fee, and the op_return to balance the blinder
+        assert_equal(len(decode["vout"]), 4)
+        assert_equal(decode["vout"][-1]["scriptPubKey"]["asm"], "OP_RETURN")
+
         self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), node0, "", "", True)
         self.nodes[0].generate(101)
         self.sync_all()
