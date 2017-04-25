@@ -2888,13 +2888,12 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 // Embed the constructed transaction data in wtxNew.
                 *static_cast<CTransaction*>(&wtxNew) = CTransaction(txNew);
 
+                assert(vAmounts.size() == output_pubkeys.size());
+                assert(output_pubkeys.size() == output_blinds.size());
+                assert(output_blinds.size() == output_asset_blinds.size());
+                assert(output_asset_blinds.size() == output_assets.size());
 
                 if (sign) {
-                    assert(vAmounts.size() == output_pubkeys.size());
-                    assert(output_pubkeys.size() == output_blinds.size());
-                    assert(output_blinds.size() == output_asset_blinds.size());
-                    assert(output_asset_blinds.size() == output_assets.size());
-
                     for (unsigned int i = 0; i< vAmounts.size(); i++) {
                         assert((output_pubkeys[i] == CPubKey())==(output_blinds[i] == uint256()));
                         assert((output_pubkeys[i] == CPubKey())==(output_asset_blinds[i] == uint256()));
