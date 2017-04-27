@@ -903,6 +903,7 @@ UniValue blindrawtransaction(const UniValue& params, bool fHelp)
     std::vector<uint256> output_asset_blinds;
     std::vector<CAsset> output_assets;
     std::vector<CPubKey> output_pubkeys;
+    int n_blinded_ins = 0;
     for (size_t nIn = 0; nIn < tx.vin.size(); nIn++) {
 
         std::map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.find(tx.vin[nIn].prevout.hash);
@@ -934,6 +935,7 @@ UniValue blindrawtransaction(const UniValue& params, bool fHelp)
         }
         else {
             input_amounts.push_back(it->second.GetOutputValueOut(tx.vin[nIn].prevout.n));
+            n_blinded_ins += 1;
         }
     }
 
@@ -950,21 +952,19 @@ UniValue blindrawtransaction(const UniValue& params, bool fHelp)
     }
 
     CMutableTransaction txBackup(tx);
-    if (numPubKeys == 0) {
+    if (numPubKeys == 0 && n_blinded_ins == 0) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, string("Transaction has no outputs to blind"));
     }
-
-    // Try blinding once, then try again with appended 0-value output
-    if (BlindTransaction(input_blinds, input_asset_blinds, input_assets, input_amounts, output_blinds, output_asset_blinds, output_pubkeys, std::vector<CKey>(), std::vector<CKey>(), tx, (auxiliary_generators.size() ? &auxiliary_generators : NULL)) != numPubKeys) {
-
+    if ((n_blinded_ins > 0 && numPubKeys == 0) || (n_blinded_ins == 0 && numPubKeys == 1)) {
         tx = txBackup;
         CTxOut newTxOut(tx.vout.back().nAsset.GetAsset(), 0, CScript() << OP_RETURN);
         tx.vout.push_back(newTxOut);
         numPubKeys++;
         output_pubkeys.push_back(pwalletMain->GetBlindingPubKey(newTxOut.scriptPubKey));
-        if (BlindTransaction(input_blinds, input_asset_blinds, input_assets, input_amounts, output_blinds, output_asset_blinds, output_pubkeys, std::vector<CKey>(), std::vector<CKey>(), tx, (auxiliary_generators.size() ? &auxiliary_generators : NULL)) != numPubKeys) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, string("Unable to blind transaction: Are you sure each output is unblinded, and each type is represented in the inputs?"));
-        }
+    }
+
+    if (BlindTransaction(input_blinds, input_asset_blinds, input_assets, input_amounts, output_blinds, output_asset_blinds, output_pubkeys, std::vector<CKey>(), std::vector<CKey>(), tx, (auxiliary_generators.size() ? &auxiliary_generators : NULL)) != numPubKeys) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, string("Unable to blind transaction: Are you sure each output is unblinded, and each type is represented in the inputs?"));
     }
 
     return EncodeHexTx(tx);
